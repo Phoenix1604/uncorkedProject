@@ -65,10 +65,6 @@ body .woocommerce .woocommerce-MyAccount-content {
 	gap: 5px;
 }
 
-/*Checkout form text*/ 
-#billing_first_name, #billing_last_name, #billing_country, #billing_address_1, #billing_city, #billing_state, #billing_postcode, #billing_email{
-	color: #000000 !important;
-}
 
 /*Disply the fields in order details table of thank you page*/
 body #content-pro .woocommerce .woocommerce-order table.shop_table tr th,
@@ -97,4 +93,18 @@ body #content-pro .width-container-pro form.woocommerce-form-login p.form-row:nt
       margin-top: 25px;
       margin-bottom: 25px;
    }
+}
+
+body #content-pro .width-container-pro .woocommerce .col2-set#customer_login #dropdown_state input[type="text"] {
+	width: 100%;
+	background-color: #ffffff;
+}
+
+.wdm-custom-registration-fields {
+	border-radius: 5px;
+    color: #000000;
+	border: 1px solid #aaa;
+}
+#afreg_additional_18512{
+	font-weight: 400;
 }
