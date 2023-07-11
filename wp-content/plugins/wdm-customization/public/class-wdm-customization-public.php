@@ -105,7 +105,7 @@ class Wdm_Customization_Public {
 	public function redirect_non_logged_in_user() {
 		global $post;
 		$page_slug          = $post->post_name;
-		$allowed_pages_slug = array( 'cart', 'checkout', 'login', '12-month-plan-save-25', 'signup', 'thank_you' );
+		$allowed_pages_slug = array( 'cart', 'checkout', 'my-account', '12-month-plan-save-25', 'signup', 'thank_you' );
 		$redirected_page_id = (int) get_option( 'wdm_redirect_page_non_logged_in_user' );
 
 		if ( 0 === $redirected_page_id ) {
@@ -213,6 +213,39 @@ class Wdm_Customization_Public {
 	/**
 	 * Filter the page restrition message to change the product link with add to cart link
 	 *
+	 * @param string $message_html The html content of the message.
+	 *
+	 * @param array  $message_args The argument of the content that being restricted.
+	 */
+	public function checkout_link_in_page_restriction_message2( $message_html, $message_args ) {
+		$siteurl_array = explode( '/', get_site_url() );
+		$siteurl_regex = '/';
+		foreach ( $siteurl_array as $part ) {
+			$siteurl_regex .= $part . '\/';
+		}
+		$siteurl_regex         .= 'product\/[^"]*/';
+		$product_urls           = array();
+		$product_link           = preg_match_all( $siteurl_regex, $message_html, $product_urls );
+		$length_of_general_link = strlen( get_site_url() . '/product/' );
+		foreach ( $product_urls[0] as $url ) {
+			$product_name = substr( $url, $length_of_general_link, -1 );
+			$args         = array(
+				'fields'    => 'ids',
+				'post_type' => 'product',
+				'name'      => $product_name,
+			);
+			$query        = get_posts( $args );
+			if ( 1 === count( $query ) ) {
+				$checkout_link = get_site_url() . '/checkout/?add-to-cart=' . $query[0] . '&quantity=1';
+				$message_html  = str_replace( $url, $checkout_link, $message_html );
+			}
+		}
+		return $message_html;
+	}
+
+	/**
+	 * Filter the page restrition message to change the product link with add to cart link
+	 *
 	 * @param string $products_merge_tag The html content of the message.
 	 * @param array  $products The argument of the content that being restricted.
 	 * @param string $message the current message where {products} is found.
@@ -236,4 +269,27 @@ class Wdm_Customization_Public {
 		return $products_merge_tag;
 	}
 
+	public function help_please() {
+		global $wp;
+		$current_url         = home_url( add_query_arg( array(), $wp->request ) );
+		$my_account_page_url = wc_get_page_permalink( 'myaccount', false );
+
+		$profile_fields_area_endpoint = get_option( 'woocommerce_myaccount_profile_fields_area_endpoint', false ); // my profile endpoint url.
+
+		if ( ! is_plugin_active( 'woocommerce-memberships/woocommerce-memberships.php' ) || ! is_plugin_active( 'one-user-avatar/one-user-avatar.php' ) ) {
+			return;
+		}
+		if ( ! $my_account_page_url || ! $profile_fields_area_endpoint ) {
+			return;
+		}
+
+		$my_profile_url = $my_account_page_url . $profile_fields_area_endpoint;
+		if ( $current_url === $my_profile_url ) {
+			add_filter( 'the_content', array( $this, 'filter_the_content_to_add_profile_pic_upload_shortcode' ), 10, 1 );
+		}
+	}
+
+	public function filter_the_content_to_add_profile_pic_upload_shortcode( $content ) {
+		return $content . do_shortcode( '[avatar_upload]' );
+	}
 }
